@@ -1,0 +1,12 @@
+/*.mainTabPane {
+    -fx-tab-min-width:3em;    
+    -fx-tab-max-width:3em;     
+    -fx-tab-min-height:3em;     
+    -fx-tab-max-height:3em;      
+}*/
+.mainTabPane .tab-label {
+    -fx-rotate: 90;
+}
+/*.mainTabPane .tab {
+    -fx-padding: 3em 0.5em 3em 0.5em;
+}*/
