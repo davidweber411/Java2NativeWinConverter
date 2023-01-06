@@ -18,7 +18,10 @@ ext {
     mainClassNameParam = 'com.wedasoft.java2nativeWinConverter.MainApplicationLauncher'
 }
 
-mainClassName = "${mainClassNameParam}"
+application {
+    mainClass = "${mainClassNameParam}"
+}
+
 sourceCompatibility = '17'
 targetCompatibility = '17'
 

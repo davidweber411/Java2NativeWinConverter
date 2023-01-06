@@ -11,13 +11,13 @@
             <menus>
                 <Menu mnemonicParsing="false" text="_Start">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#handleExitMenuItem" text="Exit"/>
+                        <MenuItem mnemonicParsing="false" onAction="#handleMenuItemExit" text="Exit"/>
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="_Help">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#handleHelpMenuItem" text="Help"/>
-                        <MenuItem mnemonicParsing="false" onAction="#handleAboutMenuItem" text="About"/>
+                        <MenuItem mnemonicParsing="false" onAction="#handleMenuItemHelp" text="Help"/>
+                        <MenuItem mnemonicParsing="false" onAction="#handleMenuItemAbout" text="About"/>
                     </items>
                 </Menu>
             </menus>
@@ -29,9 +29,9 @@
                 <Label disable="true" text="Creation settings:" underline="true"/>
                 <HBox alignment="CENTER_LEFT" spacing="5.0">
                     <children>
-                        <Button mnemonicParsing="false" onAction="#handleCreateJPackageCommand"
+                        <Button mnemonicParsing="false" onAction="#handleButtonCreateJPackageCommand"
                                 text="Create jPackage command"/>
-                        <Button mnemonicParsing="false" onAction="#handleCreateNativeApplication"
+                        <Button mnemonicParsing="false" onAction="#handleButtonCreateNativeApplication"
                                 text="Create native application"/>
                     </children>
                 </HBox>
@@ -77,10 +77,10 @@
                         <Label text="Application name (--name):" wrapText="true" GridPane.rowIndex="10"/>
                         <ChoiceBox fx:id="fileTypeToCreateChoiceBox" maxWidth="1.7976931348623157E308"
                                    GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                        <Label text="Main JAR file name (--main-jar):" wrapText="true" GridPane.rowIndex="6"/>
+                        <Label text="Path to main JAR file (--main-jar):" wrapText="true" GridPane.rowIndex="6"/>
                         <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
                             <children>
-                                <Button mnemonicParsing="false" onAction="#handleMainJarFileNameFileChooser"
+                                <Button mnemonicParsing="false" onAction="#handleButtonChooseMainJarPath"
                                         text="Choose..."/>
                                 <TextField fx:id="mainJarFileNameTextField"
                                            promptText="Could be your Desktop/Files/abc.jar" HBox.hgrow="ALWAYS"/>
@@ -91,7 +91,7 @@
                         <Label text="Application icon (--icon):" wrapText="true" GridPane.rowIndex="12"/>
                         <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                             <children>
-                                <Button mnemonicParsing="false" onAction="#handleOutputFileDestinationDirectoryChooser"
+                                <Button mnemonicParsing="false" onAction="#handleButtonChooseOutputFileDestinationPath"
                                         text="Choose..."/>
                                 <TextField fx:id="outputFileDestinationDirectoryTextField"
                                            promptText="e.g. Could be your desktop..." HBox.hgrow="ALWAYS"/>
@@ -101,7 +101,7 @@
                                    GridPane.columnIndex="1" GridPane.rowIndex="8"/>
                         <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="12">
                             <children>
-                                <Button mnemonicParsing="false" onAction="#handleIconFilePathFileChooser"
+                                <Button mnemonicParsing="false" onAction="#handleButtonChooseApplicationIconPath"
                                         text="Choose..."/>
                                 <TextField fx:id="iconFilePathTextField" promptText="e.g. .../iconForMyApp.ico"
                                            HBox.hgrow="ALWAYS"/>
@@ -110,7 +110,8 @@
                         <HBox alignment="CENTER_LEFT" spacing="5.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
                             <children>
                                 <Button fx:id="directoryWithAllFilesToPackageButton" mnemonicParsing="false"
-                                        onAction="#handleJarLocationDirectoryChooser" text="Choose..."/>
+                                        onAction="#handleButtonChooseDirectoryWithAllFilesToPackagePath"
+                                        text="Choose..."/>
                                 <TextField fx:id="directoryWithAllFilesToPackageTextField"
                                            promptText="Could be your Desktop/Files" HBox.hgrow="ALWAYS"/>
                             </children>

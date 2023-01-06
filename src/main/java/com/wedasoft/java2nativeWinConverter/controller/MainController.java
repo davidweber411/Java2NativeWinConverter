@@ -2,16 +2,15 @@ package com.wedasoft.java2nativeWinConverter.controller;
 
 import com.wedasoft.java.wedasoftCommonsLibrary.fileSystem.FileSystemUtils;
 import com.wedasoft.java.wedasoftCommonsLibrary.javaFx.FxHelperFunctions;
-import com.wedasoft.java2nativeWinConverter.config.AppConfig;
 import com.wedasoft.java2nativeWinConverter.enums.AppTypeToCreate;
 import com.wedasoft.java2nativeWinConverter.enums.MainClassReferenceType;
 import com.wedasoft.java2nativeWinConverter.enums.PackageContentType;
+import com.wedasoft.java2nativeWinConverter.helper.HelperFunctions;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
-import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -21,10 +20,10 @@ import javafx.util.StringConverter;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
+
+import static com.wedasoft.java2nativeWinConverter.MainApplicationConfig.PATH_APP_INCLUDED_JDK_JPACKAGE_EXE;
+import static com.wedasoft.java2nativeWinConverter.MainApplicationConfig.PATH_APP_TMP_DATA_DIR;
 
 public class MainController implements Initializable {
 
@@ -130,23 +129,18 @@ public class MainController implements Initializable {
             });
             mainClassTypeChoiceBox.getSelectionModel().selectedItemProperty().addListener((v, oldValue, newValue) -> {
                 if (newValue.equals(MainClassReferenceType.MAINCLASS_OF_MAINJAR)) {
-                    System.out.println("MAIN CLASS OF MAIN JAR");
                     mainClassNameTextField.setDisable(true);
                 } else if (newValue.equals(MainClassReferenceType.DEVIATING_MAINCLASS)) {
-                    System.out.println("USE DIFFERENT MAIN CLASS");
                     mainClassNameTextField.setDisable(false);
                 }
             });
             mainClassTypeChoiceBox.setValue(MainClassReferenceType.MAINCLASS_OF_MAINJAR);
-        } catch (
-
-                Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
-    public void handleJarLocationDirectoryChooser() {
+    public void handleButtonChooseDirectoryWithAllFilesToPackagePath() {
         DirectoryChooser dc = new DirectoryChooser();
         Stage actualStage = (Stage) directoryWithAllFilesToPackageTextField.getScene().getWindow();
         File file = dc.showDialog(actualStage);
@@ -155,7 +149,7 @@ public class MainController implements Initializable {
         }
     }
 
-    public void handleMainJarFileNameFileChooser() {
+    public void handleButtonChooseMainJarPath() {
         FileChooser fc = new FileChooser();
         Stage actualStage = (Stage) mainJarFileNameTextField.getScene().getWindow();
         File file = fc.showOpenDialog(actualStage);
@@ -164,7 +158,7 @@ public class MainController implements Initializable {
         }
     }
 
-    public void handleOutputFileDestinationDirectoryChooser() {
+    public void handleButtonChooseOutputFileDestinationPath() {
         DirectoryChooser dc = new DirectoryChooser();
         Stage actualStage = (Stage) outputFileDestinationDirectoryTextField.getScene().getWindow();
         File file = dc.showDialog(actualStage);
@@ -173,7 +167,7 @@ public class MainController implements Initializable {
         }
     }
 
-    public void handleIconFilePathFileChooser() {
+    public void handleButtonChooseApplicationIconPath() {
         FileChooser fc = new FileChooser();
         Stage actualStage = (Stage) iconFilePathTextField.getScene().getWindow();
         File file = fc.showOpenDialog(actualStage);
@@ -182,95 +176,11 @@ public class MainController implements Initializable {
         }
     }
 
-    public void showWarningAlert(String message) {
-        Alert alert = new Alert(AlertType.WARNING);
-        alert.setTitle(":|");
-        alert.setContentText(message);
-        alert.showAndWait();
+    public void handleButtonCreateJPackageCommand() {
+        jPackageCommandTextArea.setText(createJPackageCommandString());
     }
 
-    private String createJPackageCommandString() {
-        String jPackageCommand = "jpackage";
-
-        /* application type to create */
-        jPackageCommand += " --type " + "\"" + fileTypeToCreateChoiceBox.getValue().getJPackageArgumentValue() + "\"";
-
-        /* output directory path */
-        if (outputFileDestinationDirectoryTextField.getText().isEmpty()) {
-            showWarningAlert("You must specify a directory, in which the generated files should be placed, when they are created.");
-            return "";
-        } else {
-            jPackageCommand += " --dest " + "\"" + outputFileDestinationDirectoryTextField.getText() + "\"";
-        }
-
-        /* main jar file name path */
-        if (mainJarFileNameTextField.getText().isEmpty()) {
-            showWarningAlert("You must enter the path to the jar file which contains the main method, which shall be converted. This can be done with an absolute or a relative path.");
-            return "";
-        } else {
-            jPackageCommand += " --main-jar " + "\"" + Path.of(mainJarFileNameTextField.getText()).getFileName().toString() + "\"";
-        }
-
-        /* directory containing files to be packaged path */
-        if (filePackageTypeChoiceBox.getSelectionModel().getSelectedItem().equals(PackageContentType.SINGLE_JAR_ONLY)) {
-            jPackageCommand += " --input " + "\"" + AppConfig.APP_DATA_DIRECTORY_PATH + "\"";
-        } else if (directoryWithAllFilesToPackageTextField.getText().isEmpty()) {
-            showWarningAlert("You must enter the path of the directory, in which all files including the main JAR, which shall be packaged, are located.");
-            return "";
-        } else {
-            jPackageCommand += " --input " + "\"" + directoryWithAllFilesToPackageTextField.getText() + "\"";
-        }
-
-        /* main class name path */
-        if (!mainClassTypeChoiceBox.getSelectionModel().getSelectedItem().equals(MainClassReferenceType.MAINCLASS_OF_MAINJAR)) {
-            if (!mainClassNameTextField.getText().isEmpty()) {
-                jPackageCommand += " --main-class " + "\"" + mainClassNameTextField.getText() + "\"";
-            } else {
-                showWarningAlert("If there is a deviating main class, you must specify it.");
-            }
-        }
-
-        /* app name, app version, app icon */
-        if (appNameTextField.getText().isEmpty()) {
-            showWarningAlert("You must enter a name for your application.");
-            return "";
-        } else {
-            jPackageCommand += " --name " + "\"" + appNameTextField.getText() + "\"";
-        }
-        if (appVersionTextField.getText().isEmpty()) {
-            showWarningAlert("You must enter a version number for your application, like \"1.3\".");
-            return "";
-        } else {
-            jPackageCommand += " --app-version " + "\"" + appVersionTextField.getText() + "\"";
-        }
-        if (iconFilePathTextField.getText().isEmpty()) {
-            showWarningAlert("You do not need an icon, but we want to tell you, that you have not set the icon path. Icon files must have the filetype .ico.");
-        } else {
-            jPackageCommand += " --icon " + "\"" + iconFilePathTextField.getText() + "\"";
-        }
-
-        /* only for msi */
-        if (fileTypeToCreateChoiceBox.getSelectionModel().getSelectedItem().equals(AppTypeToCreate.MSI)) {
-            if (showDirectoryChooserDialogForInstallationCheckbox.isSelected()) {
-                jPackageCommand += " --win-dir-chooser";
-            }
-            if (createDesktopShortcutCheckbox.isSelected()) {
-                jPackageCommand += " --win-shortcut";
-            }
-            if (addApplicationToSystemMenuCheckbox.isSelected()) {
-                jPackageCommand += " --win-menu";
-            }
-        }
-
-        return jPackageCommand;
-    }
-
-    public void handleCreateJPackageCommand() {
-        String jPackageCommand = createJPackageCommandString();
-        jPackageCommandTextArea.setText(jPackageCommand);
-    }
-
-    public void handleCreateNativeApplication() {
+    public void handleButtonCreateNativeApplication() {
         try {
             String jPackageCommand = createJPackageCommandString();
             if (jPackageCommand == null || jPackageCommand.isEmpty()) {
@@ -278,31 +188,21 @@ public class MainController implements Initializable {
             }
 
             /* prepare environment for single jar packaging mode */
-            Path appDataDirectoryPath = Path.of(AppConfig.APP_DATA_DIRECTORY_PATH);
+            Path appTmpDataDirectoryPath = Path.of(PATH_APP_TMP_DATA_DIR);
             if (filePackageTypeChoiceBox.getSelectionModel().getSelectedItem().equals(PackageContentType.SINGLE_JAR_ONLY)) {
-                FileSystemUtils.clearDir(appDataDirectoryPath);
-                FileSystemUtils.copyFile(Path.of(mainJarFileNameTextField.getText()), appDataDirectoryPath, true);
+                FileSystemUtils.clearDir(appTmpDataDirectoryPath);
+                FileSystemUtils.copyFile(Path.of(mainJarFileNameTextField.getText()), appTmpDataDirectoryPath, true);
             }
 
-            /* create the native application */
-            Path jPackageExePath = Path.of(FileSystemUtils.getPathOfJarContainingClass(getClass()).getParentFile().toString(), "included-jdk-17.0.2-open-jdk", "bin", "jpackage.exe");
-
-            /* create the list of separated arguments for the process builder */
-            String[] jPackageArgsWithValuesArray = jPackageCommand.substring("jpackage".length()).split(" --");
-            List<String> jPackageArgsWithValuesList = new ArrayList<>();
-            for (String string : jPackageArgsWithValuesArray) {
-                if (!string.isBlank() && !string.isEmpty()) {
-                    jPackageArgsWithValuesList.add("--" + string);
-                }
-            }
-            List<String> jPackageSeparatedArgsAndValuesList = new ArrayList<>();
-            jPackageSeparatedArgsAndValuesList.add(jPackageExePath.toString());
-            for (String argWithValue : jPackageArgsWithValuesList) {
-                Collections.addAll(jPackageSeparatedArgsAndValuesList, argWithValue.split(" ", 2));
-            }
+            /* create a list of separated arguments for the process builder */
+            List<String> jPackageSeparatedArgsAndValuesList = new ArrayList<>() {{
+                add(PATH_APP_INCLUDED_JDK_JPACKAGE_EXE);
+            }};
+            Arrays.stream(jPackageCommand.substring("jpackage".length()).split(" --")).filter((e) -> !e.isBlank() && !e.isEmpty()).map((e) -> "--" + e).forEach((e) -> Collections.addAll(jPackageSeparatedArgsAndValuesList, e.split(" ", 2)));
 
             /* start the creation process with process builder */
             jPackageCommandTextArea.setText(jPackageSeparatedArgsAndValuesList.toString());
+
             ProcessBuilder pb = new ProcessBuilder();
             pb.command(jPackageSeparatedArgsAndValuesList);
             Process process = pb.start();
@@ -311,45 +211,18 @@ public class MainController implements Initializable {
 
             /* clear environment for single jar packaging mode */
             if (filePackageTypeChoiceBox.getSelectionModel().getSelectedItem().equals(PackageContentType.SINGLE_JAR_ONLY)) {
-                FileSystemUtils.clearDir(appDataDirectoryPath);
+                FileSystemUtils.clearDir(appTmpDataDirectoryPath);
             }
         } catch (Exception e) {
             FxHelperFunctions.displayErrorDialog("An error occurred while creating a native application.", e);
         }
     }
 
-    /* WORKS; DIALOG MUST NOT BE BEFORE RUNTIME EXEC !!!! */
-//	String escapedJPackageArguments = jPackageCommand.substring("jpackage".length());
-//	System.out.println("escapedJPackageArguments=" + escapedJPackageArguments);
-//
-//	String absoluteJPackageCommand = "\"" + jPackageExePath.toString() + "\"" + escapedJPackageArguments;
-//	System.out.println("absoluteJPackageCommand=" + absoluteJPackageCommand);
-//	jPackageCommandTextArea.setText(absoluteJPackageCommand);
-//
-//	Runtime.getRuntime().exec(absoluteJPackageCommand);
-    /* WORKS END */
-
-    public static void displayCustomAlertDialog(AlertType alertType, String frameTitle, String headerText, Node content) {
-        Alert alert;
-        if (alertType == AlertType.INFORMATION || alertType == AlertType.WARNING || alertType == AlertType.ERROR) {
-            alert = new Alert(alertType);
-        } else {
-            alert = new Alert(AlertType.INFORMATION);
-        }
-        alert.setTitle(frameTitle);
-        if (headerText != null && !headerText.isEmpty()) {
-            alert.setHeaderText(headerText);
-        }
-        alert.getDialogPane().setContent(content);
-//		alert.setContentText(contentText);
-        alert.showAndWait();
-    }
-
-    public void handleExitMenuItem() {
+    public void handleMenuItemExit() {
         FxHelperFunctions.displayExitProgramDialog();
     }
 
-    public void handleHelpMenuItem() {
+    public void handleMenuItemHelp() {
         FxHelperFunctions.displayInformationDialog("""
                 # Working explanation\r
                 This software is just a GUI application, that uses jpackage (software from Oracle JDK 17) under the hood.\r
@@ -373,7 +246,7 @@ public class MainController implements Initializable {
         System.out.println("handleHelpMenuItem!");
     }
 
-    public void handleAboutMenuItem() {
+    public void handleMenuItemAbout() {
         GridPane gridPane = new GridPane();
         gridPane.setPadding(new Insets(10, 10, 10, 10));
         gridPane.setVgap(8);
@@ -398,7 +271,81 @@ public class MainController implements Initializable {
 
         gridPane.getChildren().addAll(appNameLabel, appName, progLangLabel, progLang, authorLabel, author, creationDateLabel, creationDate);
 
-        displayCustomAlertDialog(AlertType.INFORMATION, "About", "About", gridPane);
+        HelperFunctions.displayCustomAlertDialog(AlertType.INFORMATION, "About", "About", gridPane);
     }
 
+    private String createJPackageCommandString() {
+        String jPackageCommand = "jpackage";
+
+        /* application type to create */
+        jPackageCommand += " --type " + "\"" + fileTypeToCreateChoiceBox.getValue().getJPackageArgumentValue() + "\"";
+
+        /* output directory path */
+        if (outputFileDestinationDirectoryTextField.getText().isEmpty()) {
+            HelperFunctions.showWarningAlert("You must specify a directory, in which the generated files should be placed, when they are created.");
+            return "";
+        } else {
+            jPackageCommand += " --dest " + "\"" + outputFileDestinationDirectoryTextField.getText() + "\"";
+        }
+
+        /* main jar file name path */
+        if (mainJarFileNameTextField.getText().isEmpty()) {
+            HelperFunctions.showWarningAlert("You must enter the path to the jar file which contains the main method, which shall be converted. This can be done with an absolute or a relative path.");
+            return "";
+        } else {
+            jPackageCommand += " --main-jar " + "\"" + Path.of(mainJarFileNameTextField.getText()).getFileName().toString() + "\"";
+        }
+
+        /* directory containing files to be packaged path */
+        if (filePackageTypeChoiceBox.getSelectionModel().getSelectedItem().equals(PackageContentType.SINGLE_JAR_ONLY)) {
+            jPackageCommand += " --input " + "\"" + PATH_APP_TMP_DATA_DIR + "\"";
+        } else if (directoryWithAllFilesToPackageTextField.getText().isEmpty()) {
+            HelperFunctions.showWarningAlert("You must enter the path of the directory, in which all files including the main JAR, which shall be packaged, are located.");
+            return "";
+        } else {
+            jPackageCommand += " --input " + "\"" + directoryWithAllFilesToPackageTextField.getText() + "\"";
+        }
+
+        /* main class name path */
+        if (!mainClassTypeChoiceBox.getSelectionModel().getSelectedItem().equals(MainClassReferenceType.MAINCLASS_OF_MAINJAR)) {
+            if (mainClassNameTextField.getText().isEmpty()) {
+                HelperFunctions.showWarningAlert("If there is a deviating main class, you must specify it.");
+                return "";
+            } else {
+                jPackageCommand += " --main-class " + "\"" + mainClassNameTextField.getText() + "\"";
+            }
+        }
+
+        /* app name, app version, app icon */
+        if (appNameTextField.getText().isEmpty()) {
+            HelperFunctions.showWarningAlert("You must enter a name for your application.");
+            return "";
+        } else {
+            jPackageCommand += " --name " + "\"" + appNameTextField.getText() + "\"";
+        }
+        if (appVersionTextField.getText().isEmpty()) {
+            HelperFunctions.showWarningAlert("You must enter a version number for your application, like \"1.3\".");
+            return "";
+        } else {
+            jPackageCommand += " --app-version " + "\"" + appVersionTextField.getText() + "\"";
+        }
+        if (!iconFilePathTextField.getText().isEmpty()) {
+            jPackageCommand += " --icon " + "\"" + iconFilePathTextField.getText() + "\"";
+        }
+
+        /* only for msi */
+        if (fileTypeToCreateChoiceBox.getSelectionModel().getSelectedItem().equals(AppTypeToCreate.MSI)) {
+            if (showDirectoryChooserDialogForInstallationCheckbox.isSelected()) {
+                jPackageCommand += " --win-dir-chooser";
+            }
+            if (createDesktopShortcutCheckbox.isSelected()) {
+                jPackageCommand += " --win-shortcut";
+            }
+            if (addApplicationToSystemMenuCheckbox.isSelected()) {
+                jPackageCommand += " --win-menu";
+            }
+        }
+
+        return jPackageCommand;
+    }
 }
